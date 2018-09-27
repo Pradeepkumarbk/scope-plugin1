@@ -9,7 +9,7 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       # - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run: make .iops.uptodate
+      - run: make 
 
 
 # machine:
