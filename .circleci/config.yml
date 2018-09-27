@@ -5,8 +5,8 @@ jobs:
       - image: circleci/golang:1.9
     working_directory: /go/src/github.com/openebs/scope-plugin1
     steps:
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - checkout
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run: make
 
 
