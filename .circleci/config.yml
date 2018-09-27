@@ -3,13 +3,11 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.9
-    working_directory: /go/src/github.com/Pradeepkumarbk/scope-plugin1
+    working_directory: /go/src/github.com/openebs/scope-plugin1
     steps:
-      # - checkout
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
-      # - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run: make .iops.uptodate
 
 
