@@ -6,7 +6,9 @@ jobs:
     working_directory: /go/src/github.com/openebs/scope-plugin1
     steps:
       - checkout
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - setup_remote_docker:
+          docker_layer_caching: true
+      # - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run: make
 
 
