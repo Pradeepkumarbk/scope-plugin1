@@ -9,6 +9,9 @@ jobs:
           docker_layer_caching: true
       - checkout
       - run: make .iops.uptodate
+      - run: make test
+      - run: make lint
+      - run: make fmt
 
 
 # machine:
