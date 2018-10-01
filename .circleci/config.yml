@@ -1,14 +1,18 @@
 version: 2
 jobs:
   build:
-    # working_directory: /go/src/github.com/openebs/scope-plugin1
     docker:
       - image: circleci/golang:1.9
-    working_directory: /go/src/github.com/CircleCI-Public/circleci-demo-go
+    # working_directory: /go/src/github.com/openebs/scope-plugin1
+    environment:
+      GOPATH: /home/ubuntu
+      SRCDIR: /home/ubuntu/scope-plugin
+      PATH: $PATH:$HOME/.local/bin
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
-      - checkout
+      # - checkout
+      - run: cd $SRCDIR 
       - run: make
       - run: make test
       # - run: make lint
@@ -18,10 +22,10 @@ jobs:
 # machine:
 #   services:
 #     - docker
-#   environment:
-#     GOPATH: /home/ubuntu
-#     SRCDIR: /home/ubuntu/scope-plugin
-#     PATH: $PATH:$HOME/.local/bin
+  # environment:
+  #   GOPATH: /home/ubuntu
+  #   SRCDIR: /home/ubuntu/scope-plugin
+  #   PATH: $PATH:$HOME/.local/bin
 
 # dependencies:
 #   cache_directories:
