@@ -303,7 +303,7 @@ func (p *Plugin) metrics(data []float64) map[string]metric {
 				},
 			},
 			Min: 0,
-			Max: 100,
+			Max: 10,
 		},
 	}
 	return metrics

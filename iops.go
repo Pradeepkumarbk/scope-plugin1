@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	iopsReadChan  = make(chan map[string]float64)
+	iopsReadCha   = make(chan map[string]float64)
 	iopsWriteChan = make(chan map[string]float64)
 )
 
