@@ -6,7 +6,7 @@ jobs:
     # working_directory: /go/src/github.com/openebs/scope-plugin1
     environment:
       GOPATH: /home/ubuntu
-      SRCDIR: /home/ubuntu/scope-plugin
+      SRCDIR: /home/ubuntu/scope-plugin1
       PATH: $PATH:$HOME/.local/bin
     steps:
       - setup_remote_docker:
