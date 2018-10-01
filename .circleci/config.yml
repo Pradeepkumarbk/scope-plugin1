@@ -8,7 +8,7 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
-      - run: docker build -t weaveworksplugins/scope-iops:latest .
+      - run: make
       - run: make test
       # - run: make lint
 
