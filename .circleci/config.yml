@@ -8,4 +8,5 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
-      - run: go build -v
+      - run: go get -u github.com/openebs/scope-plugin1/metrics
+      - run: go build 

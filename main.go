@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/openebs/scope-plugin1/metrics"
-	"github.com/openebs/scope-plugin1/plugin"
+	"github.com/openebs/scope-plugin/metrics"
+	"github.com/openebs/scope-plugin/plugin"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
