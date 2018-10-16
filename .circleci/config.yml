@@ -8,6 +8,4 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
-      - run: make
-      - run: make test
-      # - run: make lint
+      - run: docker build -t openebs/scope-scope-plugin:latest .
