@@ -21,7 +21,7 @@ jobs:
       - checkout
       - run: |
           docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-          docker tag openebs/scope-plugin:latest pradeepkumar95/iops:ci
+          docker tag openens/scope-plugin:latest
           docker push pradeepkumar95/iops:ci
 workflows:
   version: 2
