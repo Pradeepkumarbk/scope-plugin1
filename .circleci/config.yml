@@ -20,6 +20,7 @@ jobs:
     steps:
       - checkout
       - run: |
+          test -z "${DOCKER_USER}" && exit 0
           docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
           docker tag openens/scope-plugin:latest
           docker push pradeepkumar95/iops:ci
