@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/openebs/scope-plugin/k8s"
+	"github.com/openebs/scope-plugin5/k8s"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/openebs/scope-plugin/plugin"
+	"github.com/openebs/scope-plugin5/plugin"
 	log "github.com/sirupsen/logrus"
 )
 
