@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/openebs/scope-plugin/k8s"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 // Query parameters for cortex agent.
@@ -32,8 +32,7 @@ var (
 	writeLatency    = make(map[string]float64)
 	readThroughput  = make(map[string]float64)
 	writeThroughput = make(map[string]float64)
-	// Clientset contains kubernetes client.
-	ClientSet *kubernetes.Clientset
+	querymap        = make(map[string]map[string]float64)
 )
 
 // Mutex is used to lock over metrics structure.
@@ -80,50 +79,59 @@ func GetValues() map[string]PVMetrics {
 			}
 		}
 
-		if query == iopsReadQuery {
-			readIops = metrics
-		} else if query == iopsWriteQuery {
-			writeIops = metrics
-		} else if query == latencyReadQuery {
-			readLatency = metrics
-		} else if query == latencyWriteQuery {
-			writeLatency = metrics
-		} else if query == throughputReadQuery {
-			readThroughput = metrics
-		} else if query == throughputWriteQuery {
-			writeThroughput = metrics
-		}
+		// switch query {
+		// case iopsReadQuery:
+		// 	readIops = metrics
+		// case iopsWriteQuery:
+		// 	writeIops = metrics
+		// case latencyReadQuery:
+		// 	readLatency = metrics
+		// case latencyWriteQuery:
+		// 	writeLatency = metrics
+		// case throughputReadQuery:
+		// 	readThroughput = metrics
+		// case throughputWriteQuery:
+		// 	writeThroughput = metrics
+		// }
+		// querymap := make(map[string]map[string]float64)
+		querymap[query] = metrics
 	}
 
 	data := make(map[string]PVMetrics)
-	if len(readIops) > 0 && len(writeIops) > 0 && len(readLatency) > 0 && len(writeLatency) > 0 && len(readThroughput) > 0 && len(writeThroughput) > 0 {
-		for pvName, iopsRead := range readIops {
-			meta, err := ClientSet.CoreV1().PersistentVolumes().Get(pvName, metav1.GetOptions{})
-			if err != nil {
-				log.Errorf("error in fetching PV: %+v", err)
-				continue
-			}
+	if len(querymap[iopsReadQuery]) > 0 && len(querymap[iopsWriteQuery]) > 0 && len(querymap[latencyReadQuery]) > 0 && len(querymap[latencyWriteQuery]) > 0 && len(querymap[throughputReadQuery]) > 0 && len(querymap[throughputWriteQuery]) > 0 {
+		// if len(readIops) > 0 && len(writeIops) > 0 && len(readLatency) > 0 && len(writeLatency) > 0 && len(readThroughput) > 0 && len(writeThroughput) > 0 {
+		pvList, err := k8s.ClientSet.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
+		if err != nil {
+			log.Error(err)
+		}
 
+		pvUID := make(map[string]string)
+
+		for _, p := range pvList.Items {
+			pvUID[p.GetName()] = string(p.GetUID())
+		}
+
+		for pvName, iopsRead := range querymap[iopsReadQuery] {
 			metrics := PVMetrics{
 				ReadIops: iopsRead,
 			}
 
-			if val, ok := writeIops[pvName]; ok {
+			if val, ok := (querymap[iopsWriteQuery])[pvName]; ok {
 				metrics.WriteIops = val
 			}
-			if val, ok := readLatency[pvName]; ok {
+			if val, ok := (querymap[latencyReadQuery])[pvName]; ok {
 				metrics.ReadLatency = val
 			}
-			if val, ok := writeLatency[pvName]; ok {
+			if val, ok := (querymap[latencyWriteQuery])[pvName]; ok {
 				metrics.WriteLatency = val
 			}
-			if val, ok := readThroughput[pvName]; ok {
+			if val, ok := (querymap[throughputReadQuery])[pvName]; ok {
 				metrics.ReadThroughput = val
 			}
-			if val, ok := writeThroughput[pvName]; ok {
+			if val, ok := (querymap[throughputWriteQuery])[pvName]; ok {
 				metrics.WriteThroughput = val
 			}
-			data[string(meta.UID)] = metrics
+			data[pvUID[pvName]] = metrics
 		}
 	}
 	return data
