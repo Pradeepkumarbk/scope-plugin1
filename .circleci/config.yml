@@ -13,3 +13,25 @@ jobs:
       - run: golint
       - run: go test ./...
       - run: go fmt ./...
+  deploy:
+    machine:
+      enabled: true
+    working_directory: /go/src/github.com/openebs/scope-plugin5
+    steps:
+      - checkout
+      - run: |
+          docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+          docker tag openebs/scope-plugin:latest pradeepkumar95/iops:ci
+          docker push pradeepkumar95/iops:ci
+workflows:
+  version: 2
+  test_and_deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+    
