@@ -3,7 +3,7 @@ package plugin
 import (
 	"time"
 
-	"github.com/openebs/scope-plugin/metrics"
+	"github.com/openebs/scope-plugin5/metrics"
 )
 
 // Plugin struct groups the methods a plugin needs.

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/openebs/scope-plugin/metrics"
+	"github.com/openebs/scope-plugin5/metrics"
 	log "github.com/sirupsen/logrus"
 )
 
