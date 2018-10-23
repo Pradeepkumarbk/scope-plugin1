@@ -14,8 +14,8 @@ jobs:
       - run: go test ./...
       - run: go fmt ./...
   deploy:
-    machine:
-      enabled: true
+    docker:
+      - image: circleci/golang:1.9
     working_directory: /go/src/github.com/openebs/scope-plugin5
     steps:
       - checkout
