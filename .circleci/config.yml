@@ -23,7 +23,9 @@ jobs:
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push pradeepkumar95/scope-plugin5:ci
+          for IMAGE in $IMAGES; do
+              docker push pradeepkumar95/scope-plugin:ci
+          done
 workflows:
   version: 2
   test_and_deploy:
