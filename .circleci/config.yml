@@ -9,6 +9,7 @@ jobs:
           docker_layer_caching: true
       - checkout
       - run: make
+      - run: docker tag openebs/scope-plugin:latest pradeepkumar95/iops:ci
       - run: go get -u golang.org/x/lint/golint
       - run: golint
       - run: go test ./...
@@ -23,7 +24,6 @@ jobs:
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker tag openebs/scope-plugin:latest pradeepkumar95/iops:ci
           docker push pradeepkumar95/iops:ci
 workflows:
   version: 2
