@@ -23,17 +23,21 @@ jobs:
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker tag pradeepkumar95/scope-plugin:ci pradeepkumar95/scope-plugin:ci1
-          docker push pradeepkumar95/scope-plugin:ci1
-# workflows:
-#   version: 2
-#   test_and_deploy:
-#     jobs:
-#       - build
-#       - deploy:
-#           filters:
-#             branches:
-#               only: master
-#           requires:
-#             - build
+          for IMAGE in $IMAGES; do
+              docker tag pradeepkumar95/$IMAGE:ci pradeepkumar95/$IMAGE:ci1
+              docker push pradeepkumar95/$IMAGE:ci1
+          done
+          # docker tag pradeepkumar95/scope-plugin:ci pradeepkumar95/scope-plugin:ci1
+          # docker push pradeepkumar95/scope-plugin:ci1
+workflows:
+  version: 2
+  test_and_deploy:
+    jobs:
+      - build
+      - deploy:
+          filters:
+            branches:
+              only: master
+          requires:
+            - build
     
