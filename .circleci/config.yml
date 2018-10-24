@@ -33,8 +33,10 @@ jobs:
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker tag openebs/scope-plugin:ci pradeepkumar95/iops:ci
-          docker push pradeepkumar95/iops:ci
+          for IMAGE in $IMAGES; do
+            docker tag openebs/scope-plugin:ci pradeepkumar95/iops:ci
+            docker push pradeepkumar95/iops:ci
+          done
 workflows:
   version: 2
   test_and_deploy:
