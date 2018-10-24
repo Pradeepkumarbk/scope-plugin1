@@ -26,7 +26,7 @@ jobs:
     steps:
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
-          at: /go/src/github.com/openebs/scope-plugin5
+          at: .
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
