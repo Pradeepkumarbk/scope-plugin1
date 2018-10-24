@@ -21,7 +21,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      -run: |
+      - run: |
           pip install awscli
           docker load -i plugin.tar
       - run: |
