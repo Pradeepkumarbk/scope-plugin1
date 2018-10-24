@@ -9,6 +9,7 @@ jobs:
           docker_layer_caching: true
       - checkout
       - run: make
+      - run: docker save pradeepkumar95/scope-plugin:ci > plugin.tar
       - run: go get -u golang.org/x/lint/golint
       - run: golint
       - run: go test ./...
@@ -20,6 +21,9 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      -run: |
+          pip install awscli
+          docker load -i plugin.tar
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
