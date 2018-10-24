@@ -22,7 +22,6 @@ jobs:
       - checkout
       - setup_remote_docker
       - run: |
-          pip install awscli
           docker load -i plugin.tar
       - run: |
           test -z "${DOCKER_USER}" && exit 0
