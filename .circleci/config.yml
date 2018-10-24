@@ -6,9 +6,6 @@ version: 2
 jobs:
   build:
     <<: *defaults
-    # docker:
-    #   - image: circleci/golang:1.9
-    # working_directory: /go/src/github.com/openebs/scope-plugin5
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
@@ -18,25 +15,36 @@ jobs:
       - run: golint
       - run: go test ./...
       - run: go fmt ./...
+      - persist_to_workspace:
+          root: .
+          paths:
+          - plugin.tar
   deploy:
     <<: *defaults
-    # docker:
-    #   - image: circleci/golang:1.9
-    # working_directory: /go/src/github.com/openebs/scope-plugin5
     steps:
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: .
-      - setup_remote_docker:
-          docker_layer_caching: true
       - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: .
+      - run: docker load -i plugin.tar
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          for IMAGE in $IMAGES; do
-              docker tag openebs/scope-plugin:ci pradeepkumar95/iops:ci
-              docker push pradeepkumar95/iops:ci
-          done
+          docker tag openebs/scope-plugin:ci pradeepkumar95/iops:ci
+          docker push pradeepkumar95/iops:ci
+  deploy1:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: .
+      - run: docker load -i plugin.tar
+      - run: |
+          test -z "${DOCKER_USER}" && exit 0
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker tag openebs/scope-plugin:ci pradeepkumar95/iops:$(./tools/image-tag)
+          docker push pradeepkumar95/iops:$(./tools/image-tag)
 workflows:
   version: 2
   test_and_deploy:
@@ -48,4 +56,10 @@ workflows:
           filters:
             branches:
               only: master
+      - deploy1:
+          requires:
+            - build
+          filters:
+            branches:
+              only: staging
     
