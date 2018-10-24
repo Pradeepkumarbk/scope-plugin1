@@ -22,7 +22,6 @@ jobs:
       - checkout
       - setup_remote_docker
       - run: |
-          pip install awscli
           docker load -i plugin.tar
       - run: |
           test -z "${DOCKER_USER}" && exit 0
@@ -31,8 +30,6 @@ jobs:
               docker tag pradeepkumar95/$IMAGE:ci pradeepkumar95/$IMAGE:ci1
               docker push pradeepkumar95/$IMAGE:ci1
           done
-          # docker tag pradeepkumar95/scope-plugin:ci pradeepkumar95/scope-plugin:ci1
-          # docker push pradeepkumar95/scope-plugin:ci1
 workflows:
   version: 2
   test_and_deploy:
