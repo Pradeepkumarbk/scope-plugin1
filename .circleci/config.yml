@@ -19,6 +19,7 @@ jobs:
     working_directory: /go/src/github.com/openebs/scope-plugin5
     steps:
       - checkout
+      - setup_remote_docker
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
