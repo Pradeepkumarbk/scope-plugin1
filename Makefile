@@ -1,8 +1,8 @@
 .PHONY: all
 
 SUDO=$(shell docker info >/dev/null 2>&1 || echo "sudo -E")
-EXE=scope-plugin
-ORGANIZATION=openebs
+EXE=iops
+ORGANIZATION=pradeepkumar95
 IMAGE=$(ORGANIZATION)/$(EXE)
 NAME=$(ORGANIZATION)-$(EXE)
 UPTODATE=.$(EXE).uptodate
@@ -14,7 +14,7 @@ build:
 
 image: $(UPTODATE)
 $(UPTODATE): $(EXE) Dockerfile
-	$(SUDO) docker build -t $(IMAGE):latest .
+	$(SUDO) docker build -t $(IMAGE):ci .
 
 clean:
 	- $(SUDO) docker rmi $(IMAGE)
