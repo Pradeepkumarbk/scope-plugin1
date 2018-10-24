@@ -24,10 +24,7 @@ jobs:
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          for IMAGE in $(./tools); do
-            docker tag openebs/scope-plugin:latest pradeepkumar95/iops:ci
-            docker push pradeepkumar95/iops:ci
-          done
+          docker push pradeepkumar95/iops:ci
 workflows:
   version: 2
   test_and_deploy:
