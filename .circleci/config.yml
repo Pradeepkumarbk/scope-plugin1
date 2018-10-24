@@ -24,7 +24,7 @@ jobs:
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push pradeepkumar95/iops:ci
+          docker push pradeepkumar95/iops:c
 workflows:
   version: 2
   test_and_deploy:
