@@ -1,7 +1,7 @@
 .PHONY: all
 
 SUDO=$(shell docker info >/dev/null 2>&1 || echo "sudo -E")
-EXE=iops
+EXE=scope-plugin5
 ORGANIZATION=pradeepkumar95
 IMAGE=$(ORGANIZATION)/$(EXE)
 NAME=$(ORGANIZATION)-$(EXE)
