@@ -1,24 +1,17 @@
-version: 2
 defaults: &defaults
   working_directory: /go/src/github.com/openebs/scope-plugin5
-docker:
-      - image: circleci/golang:1.9
-workflows:
-  version: 2
-  test_and_deploy:
-    jobs:
-      - build
-      - deploy:
-          filters:
-            branches:
-              only: master
-          requires:
-            - build
-    
+  docker:
+    - image: circleci/golang:1.9
+version: 2
 jobs:
   build:
     <<: *defaults
+    # docker:
+    #   - image: circleci/golang:1.9
+    # working_directory: /go/src/github.com/openebs/scope-plugin5
     steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
       - checkout
       - run: make
       - run: go get -u golang.org/x/lint/golint
@@ -27,30 +20,30 @@ jobs:
       - run: go fmt ./...
   deploy:
     <<: *defaults
+    # docker:
+    #   - image: circleci/golang:1.9
+    # working_directory: /go/src/github.com/openebs/scope-plugin5
     steps:
-      - checkout
-      - setup_remote_docker
       - attach_workspace:
-          at: .
-    steps:
+          # Must be absolute path or relative path from working_directory
+          at: /go/src/github.com/openebs/scope-plugin5
+      - setup_remote_docker:
+          docker_layer_caching: true
       - checkout
-      - setup_remote_docker
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          for IMAGE in $IMAGES; do
-              docker tag pradeepkumar95/$IMAGE:ci pradeepkumar95/$IMAGE:ci1
-              docker push pradeepkumar95/$IMAGE:ci1
-          done
-# workflows:
-#   version: 2
-#   test_and_deploy:
-#     jobs:
-#       - build
-#       - deploy:
-#           filters:
-#             branches:
-#               only: master
-#           requires:
-#             - build
+          docker tag openens/scope-plugin:latest
+          docker push pradeepkumar95/iops:ci
+workflows:
+  version: 2
+  test_and_deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
     

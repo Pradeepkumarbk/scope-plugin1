@@ -2,7 +2,7 @@
 
 SUDO=$(shell docker info >/dev/null 2>&1 || echo "sudo -E")
 EXE=scope-plugin
-ORGANIZATION=pradeepkumar95
+ORGANIZATION=openebs
 IMAGE=$(ORGANIZATION)/$(EXE)
 NAME=$(ORGANIZATION)-$(EXE)
 UPTODATE=.$(EXE).uptodate
