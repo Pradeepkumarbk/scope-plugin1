@@ -12,8 +12,8 @@ jobs:
       - checkout
       - run: make
       - run: go get -u golang.org/x/lint/golint
-      - run: makelint
-      - run: make fmt ./...
+      - run: golint
+      - run: go fmt ./...
       - persist_to_workspace:
           root: .
           paths:
@@ -56,7 +56,7 @@ workflows:
   test_and_deploy:
     jobs:
       - build
-      - codecov:
+      - unit-test:
           requires:
             - build
       - deploy:
