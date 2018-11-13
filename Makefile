@@ -15,6 +15,7 @@ build:
 image: $(UPTODATE)
 $(UPTODATE): $(EXE) Dockerfile
 	$(SUDO) docker build -t $(IMAGE):latest .
+	$(SUDO) docker save $(IMAGE):latest > plugin.tar
 
 clean:
 	- $(SUDO) docker rmi $(IMAGE)
@@ -22,7 +23,7 @@ clean:
 # By using the `./...` notation, all the non-vendor packages are going
 # to be tested if they have test files.
 test:
-	- go test ./...
+	$(PWD)/hack/coverage.sh
 
 lint:
 	golint
