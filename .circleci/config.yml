@@ -43,7 +43,7 @@ jobs:
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker tag openebs/scope-plugin:ci pradeepkumar95/iops:$(./tools/image-tag)
+          docker tag openebs/scope-plugin:ci pradeepkumar95/iops:staging
           docker push pradeepkumar95/iops:$(./tools/image-tag)
 workflows:
   version: 2
