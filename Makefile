@@ -10,7 +10,7 @@ UPTODATE=.$(EXE).uptodate
 all: build image
 
 build:
-	go build -v
+	go build -o $(EXE) -v
 
 image: $(UPTODATE)
 $(UPTODATE): $(EXE) Dockerfile

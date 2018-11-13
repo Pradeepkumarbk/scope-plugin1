@@ -9,10 +9,11 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/openebs/scope-plugin5/plugin"
+	"github.com/openebs/scope-plugin5/metrics"
 	log "github.com/sirupsen/logrus"
 )
 
+// setupSocket will create a unix socket at the specified socket path
 func setupSocket(socketPath string) (net.Listener, error) {
 	os.RemoveAll(filepath.Dir(socketPath))
 	if err := os.MkdirAll(filepath.Dir(socketPath), 0700); err != nil {
@@ -37,8 +38,7 @@ func setupSignals(socketPath string) {
 }
 
 func main() {
-
-	// Put socket in sub-directory to have more control on permissions.
+	// Put socket in sub-directory to have more control on permissions
 	const socketPath = "/var/run/scope/plugins/openebs/openebs.sock"
 
 	// Handle the exit signal
@@ -53,13 +53,12 @@ func main() {
 		os.RemoveAll(filepath.Dir(socketPath))
 	}()
 
-	plugin := &plugin.Plugin{
-		HostID: "host",
-	}
+	pvMetrics := metrics.NewMetrics()
+	pvMetrics.GetPVList()
 
-	go plugin.UpdateMetrics()
+	go pvMetrics.UpdateMetrics()
 
-	http.HandleFunc("/report", plugin.Report)
+	http.HandleFunc("/report", pvMetrics.Report)
 	if err := http.Serve(listener, nil); err != nil {
 		log.Errorf("error: %v", err)
 	}
