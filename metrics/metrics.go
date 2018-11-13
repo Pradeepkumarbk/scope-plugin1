@@ -2,137 +2,140 @@ package metrics
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/openebs/scope-plugin5/k8s"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Query parameters for cortex agent.
+// URL is the address of cortex agent.
 const (
-	iopsReadQuery        = "increase(openebs_reads[5m])/300"
-	iopsWriteQuery       = "increase(openebs_writes[5m])/300"
-	latencyReadQuery     = "((increase(openebs_read_time[5m]))/(increase(openebs_reads[5m])))/1000000"
-	latencyWriteQuery    = "((increase(openebs_write_time[5m]))/(increase(openebs_writes[5m])))/1000000"
-	throughputReadQuery  = "increase(openebs_read_block_count[5m])/(1024*1024*60*5)"
-	throughputWriteQuery = "increase(openebs_write_block_count[5m])/(1024*1024*60*5)"
-	// URL is the address of cortex agent.
 	URL = "http://cortex-agent-service.maya-system.svc.cluster.local:80/api/v1/query?query="
-)
-
-// Map to store the query response.
-var (
-	readIops        = make(map[string]float64)
-	writeIops       = make(map[string]float64)
-	readLatency     = make(map[string]float64)
-	writeLatency    = make(map[string]float64)
-	readThroughput  = make(map[string]float64)
-	writeThroughput = make(map[string]float64)
-	querymap        = make(map[string]map[string]float64)
 )
 
 // Mutex is used to lock over metrics structure.
 var Mutex = &sync.Mutex{}
 
-// Response unmarshal the obtained Metric json
-func Response(response []byte) (*Metrics, error) {
-	result := new(Metrics)
-	err := json.Unmarshal(response, &result)
-	return result, err
+// NewMetrics will return an object of PVMetrics struct initialized with the queries.
+func NewMetrics() PVMetrics {
+	return PVMetrics{
+		Queries: map[string]string{
+			"iopsReadQuery":        "increase(openebs_reads[5m])/300",
+			"iopsWriteQuery":       "increase(openebs_writes[5m])/300",
+			"latencyReadQuery":     "((increase(openebs_read_time[5m]))/(increase(openebs_reads[5m])))/1000000",
+			"latencyWriteQuery":    "((increase(openebs_write_time[5m]))/(increase(openebs_writes[5m])))/1000000",
+			"throughputReadQuery":  "increase(openebs_read_block_count[5m])/(1024*1024*60*5)",
+			"throughputWriteQuery": "increase(openebs_write_block_count[5m])/(1024*1024*60*5)",
+		},
+		PVList:    nil,
+		Data:      nil,
+		ClientSet: k8s.NewClientSet(),
+	}
 }
 
-//GetValues will get the values from the cortex agent.
-func GetValues() map[string]PVMetrics {
-	queries := []string{iopsReadQuery, iopsWriteQuery, latencyReadQuery, latencyWriteQuery, throughputReadQuery, throughputWriteQuery}
-	for _, query := range queries {
-		res, err := http.Get(URL + query)
+// UpdateMetrics will update the metrics data and PV list
+func (p *PVMetrics) UpdateMetrics() {
+	for {
+		p.UpdatePVMetrics()
+		time.Sleep(2 * time.Second)
+	}
+}
+
+// UpdatePVMetrics will update the PVMetrics struct object with the required data
+func (p *PVMetrics) UpdatePVMetrics() {
+	data := make(map[string]map[string]float64)
+	for queryName, query := range p.Queries {
+		pvMetricsvalue, err := p.GetMetrics(query)
 		if err != nil {
 			log.Error(err)
 		}
 
-		responseBody, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			log.Error(err)
+		if pvMetricsvalue == nil {
+			data = nil
+			log.Infof("Failed to fetch metrics for %s", queryName)
+			break
 		}
+		data[queryName] = pvMetricsvalue
+	}
 
-		response, err := Response([]byte(responseBody))
-		if err != nil {
-			log.Error(err)
-		}
+	if data != nil {
+		Mutex.Lock()
+		p.Data = data
+		Mutex.Unlock()
+	}
 
-		metrics := make(map[string]float64)
+	p.GetPVList()
+}
 
-		for _, result := range response.Data.Result {
-			if result.Value[1].(string) != "NaN" {
-				floatVal, err := strconv.ParseFloat(result.Value[1].(string), 32)
-				if err == nil {
-					metrics[result.Metric.OpenebsPv] = floatVal
-				} else {
-					log.Error(err)
-				}
+// GetMetrics will return the metrics for the given query.
+func (p *PVMetrics) GetMetrics(query string) (map[string]float64, error) {
+	response, err := http.Get(URL + query)
+	if err != nil {
+		return nil, err
+	}
+
+	responseBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	pvMetrics, err := p.UnmarshalResponse([]byte(responseBody))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(pvMetrics.Data.Result) == 0 {
+		return nil, errors.New("Result is empty")
+	}
+
+	pvMetricsValue := make(map[string]float64)
+	for _, pvMetric := range pvMetrics.Data.Result {
+		if pvMetric.Value[1].(string) == "NaN" {
+			pvMetricsValue[pvMetric.Metric.OpenebsPv] = 0
+		} else {
+			metric, err := strconv.ParseFloat(pvMetric.Value[1].(string), 64)
+			if err != nil {
+				log.Error(err)
+				pvMetricsValue[pvMetric.Metric.OpenebsPv] = 0
 			} else {
-				metrics[result.Metric.OpenebsPv] = 0
+				pvMetricsValue[pvMetric.Metric.OpenebsPv] = metric
 			}
 		}
-
-		// switch query {
-		// case iopsReadQuery:
-		// 	readIops = metrics
-		// case iopsWriteQuery:
-		// 	writeIops = metrics
-		// case latencyReadQuery:
-		// 	readLatency = metrics
-		// case latencyWriteQuery:
-		// 	writeLatency = metrics
-		// case throughputReadQuery:
-		// 	readThroughput = metrics
-		// case throughputWriteQuery:
-		// 	writeThroughput = metrics
-		// }
-		// querymap := make(map[string]map[string]float64)
-		querymap[query] = metrics
 	}
 
-	data := make(map[string]PVMetrics)
-	if len(querymap[iopsReadQuery]) > 0 && len(querymap[iopsWriteQuery]) > 0 && len(querymap[latencyReadQuery]) > 0 && len(querymap[latencyWriteQuery]) > 0 && len(querymap[throughputReadQuery]) > 0 && len(querymap[throughputWriteQuery]) > 0 {
-		// if len(readIops) > 0 && len(writeIops) > 0 && len(readLatency) > 0 && len(writeLatency) > 0 && len(readThroughput) > 0 && len(writeThroughput) > 0 {
-		pvList, err := k8s.ClientSet.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
-		if err != nil {
-			log.Error(err)
-		}
+	return pvMetricsValue, nil
+}
 
-		pvUID := make(map[string]string)
-
-		for _, p := range pvList.Items {
-			pvUID[p.GetName()] = string(p.GetUID())
-		}
-
-		for pvName, iopsRead := range querymap[iopsReadQuery] {
-			metrics := PVMetrics{
-				ReadIops: iopsRead,
-			}
-
-			if val, ok := (querymap[iopsWriteQuery])[pvName]; ok {
-				metrics.WriteIops = val
-			}
-			if val, ok := (querymap[latencyReadQuery])[pvName]; ok {
-				metrics.ReadLatency = val
-			}
-			if val, ok := (querymap[latencyWriteQuery])[pvName]; ok {
-				metrics.WriteLatency = val
-			}
-			if val, ok := (querymap[throughputReadQuery])[pvName]; ok {
-				metrics.ReadThroughput = val
-			}
-			if val, ok := (querymap[throughputWriteQuery])[pvName]; ok {
-				metrics.WriteThroughput = val
-			}
-			data[pvUID[pvName]] = metrics
-		}
+// GetPVList fetch and update the list of PV.
+func (p *PVMetrics) GetPVList() {
+	pvList, err := p.ClientSet.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
+	if err != nil {
+		log.Error(err)
+		return
 	}
-	return data
+
+	p.PVList = p.PVNameAndUID(pvList.Items)
+}
+
+// PVNameAndUID returns the name and UID of all the PVs.
+func (p *PVMetrics) PVNameAndUID(pvListItems []corev1.PersistentVolume) map[string]string {
+	pvList := make(map[string]string)
+	for _, pv := range pvListItems {
+		pvList[pv.GetName()] = string(pv.GetUID())
+	}
+	return pvList
+}
+
+// UnmarshalResponse unmarshal the obtained Metric json.
+func (p *PVMetrics) UnmarshalResponse(response []byte) (*Metrics, error) {
+	metric := new(Metrics)
+	err := json.Unmarshal(response, &metric)
+	return metric, err
 }
