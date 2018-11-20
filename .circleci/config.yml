@@ -36,8 +36,8 @@ jobs:
       - run: |
           test -z "${DOCKER_USER}" && exit 0
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker tag openebs/scope-plugin:ci pradeepkumar95/iops:ci
-          docker push pradeepkumar95/iops:ci
+          docker tag openebs/scope-plugin:$CIRCLE_BUILD_NUM pradeepkumar95/iops:$CIRCLE_BUILD_NUM
+          docker push pradeepkumar95/iops:$CIRCLE_BUILD_NUM
   deploy1:
     <<: *defaults
     steps:
