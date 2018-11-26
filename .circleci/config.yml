@@ -1,76 +1,33 @@
-defaults: &defaults
-  working_directory: /go/src/github.com/openebs/scope-plugin5
-  docker:
-    - image: circleci/golang:1.9
+# defaults: &defaults
+#   working_directory: /go/src/github.com/openebs/scope-plugin5
+#   machine: 
+#       docker_layer_caching: true
+# version: 2
+# jobs:
+#   build:
+#     <<: *defaults
+#     steps:
+#       - checkout
+#       - setup_remote_docker
+#       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+#       - run: docker build -t pradeepkumar95/iops:latest .
+#       - run: docker push pradeepkumar95/iops:latest
+
+
 version: 2
 jobs:
-  build:
-    <<: *defaults
-    steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - checkout
-      - run: make
-      - run: go get -u golang.org/x/lint/golint
-      - run: golint
-      - run: go fmt ./...
-      - persist_to_workspace:
-          root: .
-          paths:
-          - plugin.tar
-  unit-test:
-    <<: *defaults
-    parallelism: 1
+  build_tag_0:
+    machine: 
+      docker_layer_caching: true
+    working_directory:  ~/github.com/Pradeepkumarbk/istgt
     steps:
       - checkout
-      - run: ./hack/coverage.sh
-      - run: bash <(curl -s https://codecov.io/bash) CODECOV_TOKEN
-  deploy:
-    <<: *defaults
-    steps:
-      - checkout
-      - setup_remote_docker
-      - attach_workspace:
-          at: .
-      - run: docker load -i plugin.tar
-      - run: |
-          test -z "${DOCKER_USER}" && exit 0
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker tag openebs/scope-plugin:$CIRCLE_BUILD_NUM pradeepkumar95/iops:$CIRCLE_BUILD_NUM
-          docker push pradeepkumar95/iops:$CIRCLE_BUILD_NUM
-  deploy1:
-    <<: *defaults
-    steps:
-      - checkout
-      - setup_remote_docker
-      - attach_workspace:
-          at: .
-      - run: docker load -i plugin.tar
-      - run: |
-          test -z "${DOCKER_USER}" && exit 0
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker tag openebs/scope-plugin:ci pradeepkumar95/iops:staging
-          docker push pradeepkumar95/iops:$(./tools/image-tag)
+      # - setup_remote_docker
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run: docker build -t pradeepkumar95/cstor-base:ci .
+      - run: docker push pradeepkumar95/cstor-base:ci
 workflows:
   version: 2
-  test_and_deploy:
+  TAGS:
     jobs:
-      - build
-      - unit-test:
-          requires:
-            - build
-      - deploy:
-          requires:
-            - build
-            - unit-test
-          filters:
-            branches:
-              only: master
-      - deploy1:
-          requires:
-            - build
-            - unit-test
-          filters:
-            branches:
-              only: staging
-    
+      - build_tag_0
